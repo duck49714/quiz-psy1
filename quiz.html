@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心理学検定 A領域 模擬試験</title>
+<style>
+body {
+  font-family: sans-serif;
+  line-height: 1.6;
+  max-width: 900px;
+  margin: auto;
+  padding: 10px;
+  background-color: #f9f9f9;
+}
+h1 { text-align: center; }
+.question {
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+}
+.choices label {
+  display: block;
+  margin: 4px 0;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.choices input {
+  transform: scale(1.3);
+  margin-right: 8px;
+}
+button {
+  padding: 12px 20px;
+  font-size: 16px;
+  margin-top: 20px;
+  display: block;
+  width: 100%;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+button:hover { background-color: #45a049; }
+.correct {
+  background-color: #d4edda;
+  border-color: #28a745;
+}
+.incorrect {
+  background-color: #f8d7da;
+  border-color: #dc3545;
+}
+.unanswered {
+  background-color: #fff3cd;
+  border-color: #ffc107;
+}
+#timer {
+  font-weight: bold;
+  color: red;
+  text-align: center;
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+.result-summary {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border: 1px solid #ccc;
+}
+</style>
+</head>
+<body>
+
+<h1>心理学検定 A領域 模擬試験</h1>
+<p id="timer">20:00</p>
+<form id="quizForm"></form>
+<button type="button" onclick="checkAnswers()">採点する</button>
+<div id="result"></div>
+
+<script>
+// 問題データ（省略せず30問全部入れる）
+const questions = [
+  // --- 知覚心理学 ---
+  {cat:"知覚",q:"両眼視差は、どの知覚に関与するか。",c:["色覚","奥行き知覚","運動知覚","大きさ恒常性"],a:1,e:"両眼の網膜像のずれを利用して距離感を知覚します。"},
+  {cat:"知覚",q:"網膜像が変化しても対象を同じ大きさに知覚する現象は何か。",c:["明るさ恒常性","大きさ恒常性","形の恒常性","色の恒常性"],a:1,e:"距離が変わっても大きさを一定に感じます。"},
+  {cat:"知覚",q:"並行線が遠くで収束するように見える奥行き手がかりは何か。",c:["重なり","線遠近法","大気遠近法","テクスチャ勾配"],a:1,e:"遠近感を生む一次元的な手がかりです。"},
+  {cat:"知覚",q:"暗順応に主に関与する視細胞はどれか。",c:["錐体","桿体","どちらも同じ","どちらでもない"],a:1,e:"桿体は暗所視に特化し、暗順応に時間がかかります。"},
+  {cat:"知覚",q:"マッハバンド現象は何によって説明されるか。",c:["両眼融合","側抑制","視覚探索","色対立過程"],a:1,e:"側抑制で隣接領域の明度差が強調されます。"},
+  {cat:"知覚",q:"色覚の三原色説を提唱したのは誰か。",c:["ヘルムホルツとヤング","ヘリング","ゲシュタルト","ギブソン"],a:0,e:"ヤング＝ヘルムホルツ説です。"},
+  {cat:"知覚",q:"運動視差はどのようなときに生じるか。",c:["自分が移動しているとき","光源が動くとき","物体が点滅するとき","視線固定中"],a:0,e:"観察者の移動で対象の見え方が変化します。"},
+  {cat:"知覚",q:"網膜像は逆さに映るが正立して知覚する理由は？",c:["脳が補正する","網膜が反転","水晶体が補正","頭の傾きが修正"],a:0,e:"大脳視覚野の処理で正立知覚になります。"},
+  {cat:"知覚",q:"矢羽の向きで線の長さが違って見える錯視は？",c:["ミュラー＝リヤー錯視","ポンゾ錯視","エビングハウス錯視","ゼニガタ錯視"],a:0,e:"矢羽根の方向が長さ知覚を変えます。"},
+  {cat:"知覚",q:"ギブソン理論の「アフォーダンス」とは？",c:["光学的流動","行為可能性","視覚適応","視覚探索"],a:1,e:"環境が主体に提供する行為の可能性です。"},
+
+  // --- 学習心理学 ---
+  {cat:"学習",q:"古典的条件づけを発見したのは？",c:["スキナー","パブロフ","ワトソン","ソーンダイク"],a:1,e:"犬の唾液分泌実験で発見しました。"},
+  {cat:"学習",q:"嫌悪刺激を除去して反応を増やす操作は？",c:["正の強化","負の強化","罰","消去"],a:1,e:"嫌な刺激を取り除くと行動が増えます。"},
+  {cat:"学習",q:"スキナー箱実験は何の研究？",c:["観察学習","オペラント条件づけ","試行錯誤学習","モデル学習"],a:1,e:"自発行動とその結果の関係を研究しました。"},
+  {cat:"学習",q:"猫の問題箱実験を行ったのは？",c:["スキナー","ソーンダイク","ワトソン","トールマン"],a:1,e:"試行錯誤による学習法則を見つけました。"},
+  {cat:"学習",q:"罰の効果で正しいのは？",c:["新行動形成","望ましい行動増加","一時的抑制","必ず消去"],a:2,e:"罰は一時的に行動を抑制します。"},
+  {cat:"学習",q:"類似刺激にも反応が生じる現象は？",c:["分化","汎化","消去","自発的回復"],a:1,e:"条件反応が類似刺激に広がります。"},
+  {cat:"学習",q:"潜在学習の例で正しいのは？",c:["地図なしで迷わず歩ける","毎日同じ時間に食事","すぐ報酬をもらう","罰回避の嘘"],a:0,e:"経験がすぐ行動に現れない学習です。"},
+  {cat:"学習",q:"ボボ人形実験が示したのは？",c:["オペラント条件づけ","古典的条件づけ","観察学習","試行錯誤学習"],a:2,e:"他者の行動観察で学習が成立します。"},
+  {cat:"学習",q:"部分強化で消去抵抗が最も高いのは？",c:["連続強化","固定比率","固定間隔","変動比率"],a:3,e:"変動比率は反応が維持されやすい。"},
+  {cat:"学習",q:"条件刺激のみを繰り返すと何が起こる？",c:["強化","消去","汎化","分化"],a:1,e:"無条件刺激なしで反応が弱まります。"},
+
+  // --- 生理心理学 ---
+  {cat:"生理",q:"中枢神経系に含まれるのは？",c:["脳と脊髄","脳と末梢神経","脊髄と末梢神経","自律神経と体性神経"],a:0,e:"中枢は脳と脊髄です。"},
+  {cat:"生理",q:"シナプス間で情報を伝える物質は？",c:["ホルモン","神経伝達物質","グリア細胞","樹状突起"],a:1,e:"例：アセチルコリン、ドーパミンなど。"},
+  {cat:"生理",q:"後頭葉損傷で障害されやすいのは？",c:["聴覚","視覚","言語理解","運動制御"],a:1,e:"後頭葉は視覚情報処理を担います。"},
+  {cat:"生理",q:"海馬の主な機能は？",c:["情動制御","長期記憶形成","運動調節","視覚認識"],a:1,e:"新しい記憶の形成に重要です。"},
+  {cat:"生理",q:"交感神経の働きで正しいのは？",c:["心拍数低下","瞳孔収縮","消化促進","発汗促進"],a:3,e:"闘争・逃走反応を活性化します。"},
+  {cat:"生理",q:"小脳の役割は？",c:["記憶形成","運動協調とバランス","感覚統合","情動反応"],a:1,e:"姿勢や運動調整を担います。"},
+  {cat:"生理",q:"ドーパミン神経系変性が原因とされる疾患は？",c:["アルツハイマー病","パーキンソン病","うつ病","統合失調症"],a:1,e:"黒質ドーパミン細胞減少が運動障害を起こします。"},
+  {cat:"生理",q:"前頭前野の主な機能は？",c:["意思決定・計画","聴覚処理","視覚処理","運動出力"],a:0,e:"高次認知や社会的行動制御に関与。"},
+  {cat:"生理",q:"ウェルニッケ野損傷で起こるのは？",c:["運動失語","感覚失語","失行","半側空間無視"],a:1,e:"言語理解が障害されます。"},
+  {cat:"生理",q:"視床の主な役割は？",c:["感覚情報の中継","運動制御","情動制御","記憶形成"],a:0,e:"感覚情報を大脳皮質に中継します。"}
+];
+
+// ランダム化
+const shuffled = [...questions].sort(() => Math.random() - 0.5);
+
+const quizForm = document.getElementById("quizForm");
+shuffled.forEach((q,i) => {
+  const div = document.createElement("div");
+  div.className = "question";
+  let html = `<p><strong>${i+1}. 【${q.cat}】</strong> ${q.q}</p><div class="choices">`;
+  q.c.forEach((choice,ci) => {
+    html += `<label><input type="radio" name="q${i}" value="${ci}"> ${choice}</label>`;
+  });
+  html += `</div>`;
+  div.innerHTML = html;
+  quizForm.appendChild(div);
+});
+
+function checkAnswers(){
+  let score = 0;
+  let categoryScore = {知覚:0, 学習:0, 生理:0};
+  let categoryTotal = {知覚:0, 学習:0, 生理:0};
+
+  shuffled.forEach((q,i) => {
+    categoryTotal[q.cat]++;
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    const labels = document.querySelectorAll(`input[name="q${i}"]`).forEach(input=>{
+      const label = input.parentElement;
+      if(parseInt(input.value) === q.a) label.classList.add("correct");
+    });
+    if(selected){
+      const ans = parseInt(selected.value);
+      if(ans === q.a){
+        score++;
+        categoryScore[q.cat]++;
+      } else {
+        selected.parentElement.classList.add("incorrect");
+      }
+    } else {
+      const qDiv = document.querySelectorAll(".question")[i];
+      qDiv.classList.add("unanswered");
+    }
+  });
+
+  document.getElementById("result").innerHTML =
+    `<div class="result-summary">
+      <h2>総合スコア：${score} / ${shuffled.length}</h2>
+      <p>知覚：${categoryScore["知覚"]}/${categoryTotal["知覚"]}　
+         学習：${categoryScore["学習"]}/${categoryTotal["学習"]}　
+         生理：${categoryScore["生理"]}/${categoryTotal["生理"]}</p>
+    </div>`;
+}
+
+// タイマー
+let time = 20 * 60;
+const timerElem = document.getElementById("timer");
+const timer = setInterval(() => {
+  const min = String(Math.floor(time / 60)).padStart(2, '0');
+  const sec = String(time % 60).padStart(2, '0');
+  timerElem.textContent = `${min}:${sec}`;
+  time--;
+  if(time < 0){
+    clearInterval(timer);
+    alert("時間切れです。採点します。");
+    checkAnswers();
+  }
+}, 1000);
+</script>
+
+</body>
+</html>
